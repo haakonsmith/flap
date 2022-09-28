@@ -1,46 +1,66 @@
--- Listeners is a map of functions with the key as the event name 
+-- Listeners is a map of functions with the key as the event name
 -- and that return true or false for event handled.
 EventLoop = {}
 EventLoop.__index = EventLoop
 
 function EventLoop:new()
     return setmetatable({
-        listeners = {}
-        -- timed_listeners = {}
+        listeners = {},
+        context = {self}
     }, EventLoop)
 end
 
 function EventLoop:handleEvent(event)
     if self.listeners then
-        for eventName, listener in pairs(self.listeners) do
 
-            local timer_name
+        for i = 1, #self.listeners do
+            local event_listener = self.listeners[i]
 
-            if event[2] == nil then
-                timer_name = nil
-            else
-                timer_name = event[1] .. event[2]
+            -- This event listener may let be null this may be an error!!! Not sure.
+            if event_listener and event[1] == event_listener[1] then
+                if 'timer' == event_listener[1] then
+                    if event_listener[3] == event[2] then
+                        event_listener[2](event, self.context)
+
+                        -- Gotta clean up those timers
+                        table.remove(self.listeners, i)
+                    end
+                else
+                    event_listener[2](event, self.context)
+                end
+
             end
 
-            -- The or tests for timer events which look like f'timer{token}'
-            if eventName == event[1] or eventName == timer_name then
-                listener(event, self)
-            end
         end
     end
 end
 
+---@param time string
+---@param callback function
 function EventLoop:timedCallback(time, callback)
     token = os.startTimer(time)
-    local event_name = 'timer' .. token
-    print('registered listener: ' .. event_name)
 
-    self.listeners[event_name] = callback
+    self:registerListener({ 'timer', callback, token })
 end
 
-function EventLoop:registerListener(eventName, callback)
-    self.listeners[eventName] = callback
-    -- table.insert(self.listeners, {eventName, callback})
+---@param options table<string, function, string>
+function EventLoop:registerListener(options)
+    print('insert!')
+    print(options[1])
+    print(options[2])
+
+    table.insert(self.listeners, options)
+
+    return self
+end
+
+---@param listeners table<string, function, string>[]
+function EventLoop:registerListeners(listeners)
+    print(listeners[1])
+    print(listeners[2])
+    for i = 1, #listeners do
+        table.insert(self.listeners, listeners[i])
+    end
 
     return self
 end
@@ -50,14 +70,14 @@ function EventLoop:queueEvent(event)
 end
 
 function EventLoop:run()
-    local k = 0
-    while k < 20 do
-        event = {os.pullEvent()}
+    -- local k = 0
+    while true do
+        local event = { os.pullEvent() }
 
         print(event[1])
 
         self:handleEvent(event)
 
-        k = k + 1
+        -- k = k + 1
     end
 end
