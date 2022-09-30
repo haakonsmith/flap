@@ -26,7 +26,11 @@ function EventLoop:handleEvent(event)
                         table.remove(self.listeners, i)
                     end
                 else
-                    event_listener[2](event, self.context)
+                    local should_remove = event_listener[2](event, self.context)
+                    
+                    if should_remove then
+                        table.remove(self.listeners, i)
+                    end
                 end
 
             end
@@ -40,24 +44,18 @@ end
 function EventLoop:timedCallback(time, callback)
     token = os.startTimer(time)
 
-    self:registerListener({ 'timer', callback, token })
+    self:registerListener({'timer', callback, token})
 end
 
----@param options table<string, function, string>
-function EventLoop:registerListener(options)
-    print('insert!')
-    print(options[1])
-    print(options[2])
-
-    table.insert(self.listeners, options)
+---@param listener table<string, function, string>
+function EventLoop:registerListener(listener)
+    table.insert(self.listeners, listener)
 
     return self
 end
 
 ---@param listeners table<string, function, string>[]
 function EventLoop:registerListeners(listeners)
-    print(listeners[1])
-    print(listeners[2])
     for i = 1, #listeners do
         table.insert(self.listeners, listeners[i])
     end
@@ -72,12 +70,8 @@ end
 function EventLoop:run()
     -- local k = 0
     while true do
-        local event = { os.pullEvent() }
-
-        print(event[1])
+        local event = {os.pullEvent()}
 
         self:handleEvent(event)
-
-        -- k = k + 1
     end
 end

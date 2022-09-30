@@ -1,4 +1,4 @@
-require "lib.flap.util.vector"
+require "util.vector"
 
 VisibiltyGroup = {}
 VisibiltyGroup.__index = VisibiltyGroup

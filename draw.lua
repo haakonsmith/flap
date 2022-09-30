@@ -6,7 +6,11 @@ function draw(context)
     function sub_draw(root)
 
         for i = 1, #root do
-            if root[i].children then
+            if root[i].layout then
+                root[i].layout(root[i])
+            end
+
+            if root[i].children and root[i].style.visible then
                 sub_draw(root[i].children)
             end
 
@@ -14,7 +18,7 @@ function draw(context)
                 root[i]:draw(monitor)
             end
             if root[i].onUpdate then
-                root[i]:onUpdate(eventLoop)
+                root[i]:onUpdate(context)
             end
         end
     end

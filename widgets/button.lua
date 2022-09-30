@@ -1,6 +1,6 @@
-require "lib.flap.util.vector"
-require "lib.flap.style"
-require "lib.flap.widgets.textNode"
+require "util.vector"
+require "style"
+require "widgets.textNode"
 
 function Button(options)
     local node = TextNode(options)
@@ -23,14 +23,26 @@ function Button(options)
         self:onClickButtonLogic()
     end
 
-    node.onUpdate = function(self, eventLoop)
-        eventLoop:timedCallback(0.2, function()
-            if self.pressed then
-                self.pressed = false
-                self.style.backgroundColor = "black"
-                self:redraw()
+    node.onUpdate = function(self, context)
+
+        if self.pressed then
+            self.pressed = false
+
+            if context.isMonitor then
+                context.eventLoop:timedCallback(0.2, function()
+                    self.style.backgroundColor = "black"
+                    self:redraw()
+
+                end)
+            else
+                context.eventLoop:registerListener({'mouse_up', function()
+                    self.style.backgroundColor = "black"
+                    self:redraw()
+
+                    return true
+                end})
             end
-        end)
+        end
     end
 
     return node
